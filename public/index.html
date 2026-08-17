@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TripCraft - AI Travel Planner</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Google Fonts: Plus Jakarta Sans for a modern, premium look -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #f4f7fe; 
+      background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0.03) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0.03) 0, transparent 50%);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Gorgeous Markdown Styling for the Output */
+    .prose h2 { font-weight: 800; font-size: 1.75rem; color: #0f172a; margin-bottom: 0.5rem; }
+    .prose p { color: #475569; margin-bottom: 1.5rem; line-height: 1.6; }
+    .prose strong { color: #1e293b; font-weight: 700; }
+    
+    /* Day Headers as Badges */
+    .prose h3 { 
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      color: white; 
+      padding: 0.4rem 1.2rem; 
+      border-radius: 9999px; 
+      display: inline-block; 
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Timeline styling for lists */
+    .prose ul { 
+      border-left: 2px dashed #cbd5e1; 
+      margin-left: 1rem; 
+      padding-left: 1.5rem; 
+      margin-bottom: 2rem;
+    }
+    .prose li { 
+      list-style: none; 
+      position: relative; 
+      margin-bottom: 1.25rem; 
+      color: #334155;
+    }
+    /* Timeline dots */
+    .prose li::before {
+      content: '';
+      position: absolute;
+      left: -1.86rem;
+      top: 0.35rem;
+      width: 12px;
+      height: 12px;
+      background: #3b82f6;
+      border-radius: 50%;
+      border: 3px solid #f4f7fe;
+      box-shadow: 0 0 0 1px #cbd5e1;
+    }
+    
+    .prose hr { border-color: #e2e8f0; margin: 2.5rem 0; }
+    .prose em { color: #64748b; font-style: normal; font-size: 0.85rem; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col items-center">
+
+  <!-- Top Navigation -->
+  <nav class="w-full bg-white/70 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="bg-blue-600 p-2 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.1-1 .5L1 17l5 2 2 5 .5-.8c.4-.2.6-.6.5-1L8.2 19l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z"/></svg>
+        </div>
+        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">TripCraft</span>
+      </div>
+      <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Powered by Gemini AI</span>
+    </div>
+  </nav>
+  
+  <main class="w-full max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+    
+    <!-- Left Column: User Input Form -->
+    <div class="lg:col-span-5 h-fit sticky top-24">
+      <div class="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+        <h1 class="text-2xl font-extrabold text-slate-900 mb-2">Design your journey</h1>
+        <p class="text-slate-500 text-sm mb-8">Enter your preferences and let our AI craft the perfect itinerary tailored just for you.</p>
+
+        <form id="tripForm" class="space-y-6">
+          
+          <!-- Destination Input -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Destination</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <input type="text" id="destination" required class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700" placeholder="Where do you want to go?" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-5">
+            <!-- Days Input -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Duration (Days)</label>
+              <input type="number" id="days" required min="1" max="30" value="4" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700" />
+            </div>
+
+            <!-- Budget Input -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Budget (Total)</label>
+              <input type="text" id="budget" required placeholder="e.g. ₹30,000" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700" />
+            </div>
+          </div>
+
+          <!-- Travel Style -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Travel Style</label>
+            <select id="travelStyle" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700 cursor-pointer">
+              <option>Mid-range & Balanced</option>
+              <option>Backpacker / Budget</option>
+              <option>Luxury & Comfort</option>
+              <option>Action-Packed & Fast</option>
+            </select>
+          </div>
+
+          <!-- Interests -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Core Interests</label>
+            <div class="flex flex-wrap gap-2" id="interest-container">
+              <label class="cursor-pointer">
+                <input type="checkbox" value="Nature" class="peer sr-only" checked />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">Nature</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="checkbox" value="Food" class="peer sr-only" checked />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">Food</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="checkbox" value="Adventure" class="peer sr-only" />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">Adventure</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="checkbox" value="History" class="peer sr-only" />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">History</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="checkbox" value="Nightlife" class="peer sr-only" />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">Nightlife</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="checkbox" value="Relaxation" class="peer sr-only" checked />
+                <span class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all shadow-sm">Relaxation</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button type="submit" id="submitBtn" class="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white font-bold py-4 rounded-xl transition-all shadow-[0_4px_14px_0_rgb(0,0,0,0.25)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              <span id="btnText">Generate Itinerary</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Output Display -->
+    <div class="lg:col-span-7">
+      <div class="bg-white p-8 lg:p-12 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 min-h-[600px] h-full">
+        
+        <!-- Empty State (Shows before generation) -->
+        <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center text-slate-400 py-20">
+          <div class="bg-slate-50 p-6 rounded-full mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/><path d="M10 4c0-1.1-.9-2-2-2H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2z"/></svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-700 mb-2">Your itinerary awaits</h3>
+          <p class="max-w-sm">Fill out the form on the left and our AI will build a comprehensive, day-by-day travel plan.</p>
+        </div>
+
+        <!-- Output Content (Injected by JS) -->
+        <div id="outputContent" class="prose max-w-none w-full hidden"></div>
+        
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const form = document.getElementById('tripForm');
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const out = document.getElementById('outputContent');
+    const emptyState = document.getElementById('emptyState');
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const checkboxes = document.querySelectorAll('#interest-container input[type="checkbox"]:checked');
+      const interests = Array.from(checkboxes).map(cb => cb.value).join(', ');
+
+      const data = {
+        destination: document.getElementById('destination').value,
+        days: document.getElementById('days').value,
+        budget: document.getElementById('budget').value,
+        travelStyle: document.getElementById('travelStyle').value,
+        interests: interests || "General Tourism"
+      };
+
+      // UI Loading State
+      btn.disabled = true;
+      btn.classList.add('opacity-70');
+      btnText.innerText = 'AI is planning...';
+      emptyState.classList.add('hidden');
+      out.classList.remove('hidden');
+      out.innerHTML = '<div class="flex items-center gap-3 text-blue-600 font-bold animate-pulse"><div class="w-2 h-2 bg-blue-600 rounded-full"></div> Crafting your personalized journey...</div>';
+      
+      try {
+        const res = await fetch('/api/generate-itinerary', { 
+          method: 'POST', 
+          headers:{'Content-Type':'application/json'}, 
+          body: JSON.stringify(data)
+        });
+        
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let md = '';
+        out.innerHTML = ''; // Clear loading message
+        
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          md += decoder.decode(value, { stream: true });
+          out.innerHTML = marked.parse(md);
+        }
+      } catch (err) { 
+        out.innerHTML = '<div class="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 font-medium">Connection error. Ensure your backend server is running.</div>'; 
+      } finally { 
+        btn.disabled = false; 
+        btn.classList.remove('opacity-70');
+        btnText.innerText = 'Generate Itinerary'; 
+      }
+    });
+  </script>
+</body>
+</html>
